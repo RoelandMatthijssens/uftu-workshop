@@ -1,0 +1,319 @@
+<!doctype html>
+%html{:lang => "en"}
+  %head
+    %meta{:charset => "utf-8"}/
+    %title E2E workshop
+    %meta{:content => "Dependency management on the blockchain", :name => "description"}/
+    %meta{:content => "Roeland Matthijssens", :name => "author"}/
+    %meta{:content => "yes", :name => "apple-mobile-web-app-capable"}/
+    %meta{:content => "black-translucent", :name => "apple-mobile-web-app-status-bar-style"}/
+    %meta{:content => "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no", :name => "viewport"}/
+    %link{:href => "reveal.js/css/reveal.min.css", :rel => "stylesheet"}/
+    %link#theme{:href => "reveal.js/css/theme/default.css", :rel => "stylesheet"}/
+    / For syntax highlighting
+    %link{:href => "reveal.js/lib/css/zenburn.css", :rel => "stylesheet"}/
+
+    / For nice fonts, load more here
+    / Go to http://www.google.com/webfonts
+    / * Add to collection
+    / * Use
+    / * pick which styles
+    / * find the link to add here
+    %link{ :href=> 'http://fonts.googleapis.com/css?family=Merriweather:400,700', :rel => 'stylesheet', :type => 'text/css'}
+    %link{ :href=> 'http://fonts.googleapis.com/css?family=Open+Sans:600', :rel => 'stylesheet', :type => 'text/css'}
+    / Nice fonts combos:
+    / http://designshack.net/articles/css/10-great-google-font-combinations-you-can-copy/
+
+    / Override the reveal.js fonts here, after loading them above
+    :css
+      .reveal h1 {
+        font-family: 'Merriweather', serif;
+        text-transform: none;
+        line-height: 1.0em;
+      }
+      .reveal h2 {
+        font-family: 'Merriweather', serif;
+        text-transform: none;
+      }
+      .reveal h3 {
+        font-family: 'Open Sans', sans-serif;
+        text-transform: none;
+      }
+      .reveal p {
+        font-family: 'Open Sans', sans-serif;
+        text-transform: none;
+      }
+
+      /* Misc layout */
+      table.centric {
+        margin-left: auto;
+        margin-right: auto;
+      }
+      table.centric td {
+        vertical-align: middle;
+        text-align: center;
+      }
+      li {
+        text-align:left;
+        padding: 9px !important;
+      }
+      ul.no-bullets {
+        list-style-type:none;
+      }
+
+      h3{
+        margin: 60px;
+      }
+
+      /* Styles for the specific data-state for the last slide */
+      html.the-end .state-background {
+        background-color: rgba(0,0,0, 0.8);
+      }
+
+
+      .strike {
+        text-decoration: line-through;
+      }
+
+    / If the query includes 'print-pdf', use the PDF print sheet
+    :javascript
+      document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+            /[if lt IE 9]
+      <script src="reveal.js/lib/js/html5shiv.js"></script>
+  %body
+    .reveal
+      / Any section element inside of this container is displayed as a slide
+      .slides
+
+        %section
+          %h1 E2E Workshop
+          %br
+          %p Roeland Matthijssens
+
+        %section
+          %h3 Content
+          %ul
+            %li Setup
+            %li UFTU
+            %li Tipssi
+            %li Example
+
+        %section
+          %h3 Production
+          %img(src='images/setup.svg'){style: 'width:100%'}
+
+        %section
+          %h3 Local / Staging
+          %h4 Goal
+          %img(src='images/tipssi.svg'){style: 'width:100%'}
+          Alternative:
+          %img(src='images/tipssi2.svg'){style: 'width:100%'}
+
+        %section
+          %h3 Setup
+          %h4 Instructions
+          %ul
+            %li Install tipssi
+            %li Install UWA and link it to tipssi
+            %li Install mv-web and link it to UWA
+            %li
+              %a{title: 'https://github.com/RoelandMatthijssens/uftu-workshop/blob/master/install_instructions',
+                 href: 'https://github.com/RoelandMatthijssens/uftu-workshop/blob/master/install_instructions'}
+                Full install instructions
+
+        %section
+          %h3 UFTU
+
+        %section
+          %h3 Mv-web Integration
+          %h4 Test
+          %pre
+            %code
+              :preserve
+                class PartnershipTest(BaseTest):
+                    def test_generic_landing_page(self):
+                        user = create_user()
+
+                        log_in(self.browser, user)
+                        home_page = HomePage(self.browser).go()
+                        viking_deals_page = home_page.click_viking_deals()
+                        viking_deals_page.click_deal('coolblue')
+                        assert viking_deals_page.check_partner_name('Coolblue')
+                        assert viking_deals_page.check_button_text()
+
+        %section
+          %h3 Mv-web Integration
+          %h4 PageObjects
+          %pre
+            %code
+              :preserve
+                class HomePage(BasePage):
+                    ...
+                    def click_viking_deals(self):
+                      # because we have no ID on the button we
+                      # want to click we will just go to the URL for now
+                      return VikingDealPage(self.browser).go()
+                    ...
+          %pre
+            %code
+              :preserve
+                class VikingDealPage(BasePage):
+                    ...
+                    def click_deal(self, partner_slug):
+                        self.wait_for_text(partner_slug)
+                        self.click(f'\#{partner_slug}')
+                    ...
+
+        %section
+          %h3 UFTU
+          %h4 Base PageObject Functionality
+          %pre
+            %code
+              :preserve
+                class PageObject:
+                    """ The base class for the page object abstraction as detailed here:
+                    https://martinfowler.com/bliki/PageObject.html """
+                    def __init__(self, browser, base_path_results): ...
+                    def check_html_title(self): ...
+                    def take_screenshot(self, description): ...
+                    def go(self): ...
+                    def click(self, css_selector, offset=None): ...
+                    def click_with_offset(self, element, offset): ...
+                    def get_element(self, css_selector): ...
+                    def is_element_on_page(self, css_selector): ...
+                    def fill_field(self, css_selector, value): ...
+                    def select_option(self, css_selector, value): ...
+                    def text_on_page(self, text, css_selector='body'): ...
+                    def wait_for_element(self, css_selector): ...
+                    def wait_for_text(self, text, css_selector='body'): ...
+                    def wait_for_ajax(self): ...
+                    def wait_for_autoscroll(self, css_selector, threshold=5): ...
+          %a{title: 'UFTU repo', href: 'https://github.com/vikingco/unleashed-flow-test-utils'}
+            https://github.com/vikingco/unleashed-flow-test-utils
+
+        %section
+          %h3 UFTU
+          %h4 Philosophy
+          %img(src='images/concept.svg'){style: 'width:100%'}
+
+        %section
+          %h3 Running Tests
+          %ul.no-bullets
+            %li
+              Run the tests using the entrypoint script (for mv-web)
+              %pre
+                %code
+                  :preserve
+                    $ docker-compose run integration_tests \
+                                     ./entrypoint.sh {env_file} {args}
+            %li
+              env specifies servers to use
+              %pre
+                %code
+                  :preserve
+                    $ docker-compose run integration_tests ./entrypoint.sh local
+              %pre
+                %code
+                  :preserve
+                    TEST_TARGET=${TEST_TARGET:-local}
+                    BASE_URL=${BASE_URL:-http://localhost:8020}
+                    BASE_LANGUAGE=${BASE_LANGUAGE:-en}
+                    RUN_HEADLESS=${RUN_HEADLESS:-True}
+            %li
+              args are passed directly to pytest
+              %pre
+                %code
+                  :preserve
+                    -k test_login
+                    -x
+                    -n 4
+                    ...
+
+        %section
+          %h3 Tipssi
+          ThIrd Party Service SImulator
+        %section
+          %h3 Tipssi
+          %h4 Features
+          %ul
+            %li Static/Template responses
+            %li Status codes
+            %li Dispatches on HTTP method
+            %li Dispatches on POST/GET variables
+        %section
+          %h3 Tipssi
+          %pre
+            %code
+              :preserve
+                responses_default ➤ ll
+                total 304K
+                -rw-r--r-- 1 enermis enermis GET_200_mv_authorizations.json
+                -rw-r--r-- 1 enermis enermis GET_200_mv_customers_me.json
+                -rw-r--r-- 1 enermis enermis GET_200_mv_invoices_{{id}}_pdf.pdf
+                -rw-r--r-- 1 enermis enermis GET_200_mv_invoices_page_0_1.json
+                -rw-r--r-- 1 enermis enermis GET_200_mv_orders_{{id}}.json
+                -rw-r--r-- 1 enermis enermis POST_200_mv_oauth2_token.json
+                -rw-r--r-- 1 enermis enermis POST_201_mv_authorizations.json
+                ...
+        %section
+          %h3 Tipssi
+          %h4 Dispatch order
+          %ul
+            %li
+              Parameterized Request
+              %pre
+                %code
+                  :preserve
+                    POST to `updateCustomer`
+                    body `{'name': 'test', 'email': 'test@example.com'}`
+                    --> POST_200_updateCustomer_email_test_example_com.xml
+            %li
+              File map
+              %pre
+                %code
+                  :preserve
+                    GET to `getCustomer`
+                    --> GET_200_getCustomer.xml
+            %li
+              Parameterized File Map
+              %pre
+                %code
+                  :preserve
+                    GET to `getCustomer/id/123`
+                    --> GET_200_getCustomer_{{param}}_123.xml
+                    --> GET_200_getCustomer_id_{{id}}.xml
+
+        %section
+          %h3 Tipssi
+          %h4 Pain points
+          %ul
+            %li WSDL updates
+            %li No persistence
+            %li UWA - Tipssi Sync
+
+    %script{:src => "reveal.js/lib/js/head.min.js"}
+    %script{:src => "reveal.js/js/reveal.min.js"}
+    :javascript
+      // Full list of configuration options available here: JPL
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: false,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || 'linear', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+            { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+            { src: 'reveal.js/plugin/markdown/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+            { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+            { src: 'reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+            { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+            { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+            { src: 'reveal.js/plugin/highlight/highlight.js', async: true, condition: function() { return !!document.body.classList; } },
+            // { src: 'reveal.js/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });

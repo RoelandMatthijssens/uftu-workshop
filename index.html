@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<title>E2E workshop</title>
+<meta content='Dependency management on the blockchain' name='description'>
+<meta content='Roeland Matthijssens' name='author'>
+<meta content='yes' name='apple-mobile-web-app-capable'>
+<meta content='black-translucent' name='apple-mobile-web-app-status-bar-style'>
+<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' name='viewport'>
+<link href='reveal.js/css/reveal.min.css' rel='stylesheet'>
+<link href='reveal.js/css/theme/default.css' id='theme' rel='stylesheet'>
+<!-- For syntax highlighting -->
+<link href='reveal.js/lib/css/zenburn.css' rel='stylesheet'>
+<!-- For nice fonts, load more here -->
+<!-- Go to http://www.google.com/webfonts -->
+<!-- * Add to collection -->
+<!-- * Use -->
+<!-- * pick which styles -->
+<!-- * find the link to add here -->
+<link href='http://fonts.googleapis.com/css?family=Merriweather:400,700' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:600' rel='stylesheet' type='text/css'>
+<!-- Nice fonts combos: -->
+<!-- http://designshack.net/articles/css/10-great-google-font-combinations-you-can-copy/ -->
+<!-- Override the reveal.js fonts here, after loading them above -->
+<style>
+  .reveal h1 {
+    font-family: 'Merriweather', serif;
+    text-transform: none;
+    line-height: 1.0em;
+  }
+  .reveal h2 {
+    font-family: 'Merriweather', serif;
+    text-transform: none;
+  }
+  .reveal h3 {
+    font-family: 'Open Sans', sans-serif;
+    text-transform: none;
+  }
+  .reveal p {
+    font-family: 'Open Sans', sans-serif;
+    text-transform: none;
+  }
+  
+  /* Misc layout */
+  table.centric {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  table.centric td {
+    vertical-align: middle;
+    text-align: center;
+  }
+  li {
+    text-align:left;
+    padding: 9px !important;
+  }
+  ul.no-bullets {
+    list-style-type:none;
+  }
+  
+  h3{
+    margin: 60px;
+  }
+  
+  /* Styles for the specific data-state for the last slide */
+  html.the-end .state-background {
+    background-color: rgba(0,0,0, 0.8);
+  }
+  
+  
+  .strike {
+    text-decoration: line-through;
+  }
+</style>
+<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+<script>
+  document.write( '<link rel="stylesheet" href="reveal.js/css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+        /[if lt IE 9]
+  <script src="reveal.js/lib/js/html5shiv.js"></script>
+</script>
+</head>
+<body>
+<div class='reveal'>
+<!-- Any section element inside of this container is displayed as a slide -->
+<div class='slides'>
+<section>
+<h1>E2E Workshop</h1>
+<br>
+<p>Roeland Matthijssens</p>
+</section>
+<section>
+<h3>Content</h3>
+<ul>
+<li>Setup</li>
+<li>UFTU</li>
+<li>Tipssi</li>
+<li>Example</li>
+</ul>
+</section>
+<section>
+<h3>Production</h3>
+<img src='images/setup.svg' style='width:100%'>
+</section>
+<section>
+<h3>Local / Staging</h3>
+<h4>Goal</h4>
+<img src='images/tipssi.svg' style='width:100%'>
+Alternative:
+<img src='images/tipssi2.svg' style='width:100%'>
+</section>
+<section>
+<h3>Setup</h3>
+<h4>Instructions</h4>
+<ul>
+<li>Install tipssi</li>
+<li>Install UWA and link it to tipssi</li>
+<li>Install mv-web and link it to UWA</li>
+<li>
+<a href='https://github.com/RoelandMatthijssens/uftu-workshop/blob/master/install_instructions' title='https://github.com/RoelandMatthijssens/uftu-workshop/blob/master/install_instructions'>
+Full install instructions
+</a>
+</li>
+</ul>
+</section>
+<section>
+<h3>UFTU</h3>
+</section>
+<section>
+<h3>Mv-web Integration</h3>
+<h4>Test</h4>
+<pre><code>class PartnershipTest(BaseTest):&#x000A;    def test_generic_landing_page(self):&#x000A;        user = create_user()&#x000A;&#x000A;        log_in(self.browser, user)&#x000A;        home_page = HomePage(self.browser).go()&#x000A;        viking_deals_page = home_page.click_viking_deals()&#x000A;        viking_deals_page.click_deal('coolblue')&#x000A;        assert viking_deals_page.check_partner_name('Coolblue')&#x000A;        assert viking_deals_page.check_button_text()&#x000A;</code></pre>
+</section>
+<section>
+<h3>Mv-web Integration</h3>
+<h4>PageObjects</h4>
+<pre><code>class HomePage(BasePage):&#x000A;    ...&#x000A;    def click_viking_deals(self):&#x000A;      # because we have no ID on the button we&#x000A;      # want to click we will just go to the URL for now&#x000A;      return VikingDealPage(self.browser).go()&#x000A;    ...</code></pre>
+<pre><code>class VikingDealPage(BasePage):&#x000A;    ...&#x000A;    def click_deal(self, partner_slug):&#x000A;        self.wait_for_text(partner_slug)&#x000A;        self.click(f'#{partner_slug}')&#x000A;    ...&#x000A;</code></pre>
+</section>
+<section>
+<h3>UFTU</h3>
+<h4>Base PageObject Functionality</h4>
+<pre><code>class PageObject:&#x000A;    """ The base class for the page object abstraction as detailed here:&#x000A;    https://martinfowler.com/bliki/PageObject.html """&#x000A;    def __init__(self, browser, base_path_results): ...&#x000A;    def check_html_title(self): ...&#x000A;    def take_screenshot(self, description): ...&#x000A;    def go(self): ...&#x000A;    def click(self, css_selector, offset=None): ...&#x000A;    def click_with_offset(self, element, offset): ...&#x000A;    def get_element(self, css_selector): ...&#x000A;    def is_element_on_page(self, css_selector): ...&#x000A;    def fill_field(self, css_selector, value): ...&#x000A;    def select_option(self, css_selector, value): ...&#x000A;    def text_on_page(self, text, css_selector='body'): ...&#x000A;    def wait_for_element(self, css_selector): ...&#x000A;    def wait_for_text(self, text, css_selector='body'): ...&#x000A;    def wait_for_ajax(self): ...&#x000A;    def wait_for_autoscroll(self, css_selector, threshold=5): ...</code></pre>
+<a href='https://github.com/vikingco/unleashed-flow-test-utils' title='UFTU repo'>
+https://github.com/vikingco/unleashed-flow-test-utils
+</a>
+</section>
+<section>
+<h3>UFTU</h3>
+<h4>Philosophy</h4>
+<img src='images/concept.svg' style='width:100%'>
+</section>
+<section>
+<h3>Running Tests</h3>
+<ul class='no-bullets'>
+<li>
+Run the tests using the entrypoint script (for mv-web)
+<pre><code>$ docker-compose run integration_tests \&#x000A;                 ./entrypoint.sh {env_file} {args}</code></pre>
+</li>
+<li>
+env specifies servers to use
+<pre><code>$ docker-compose run integration_tests ./entrypoint.sh local</code></pre>
+<pre><code>TEST_TARGET=${TEST_TARGET:-local}&#x000A;BASE_URL=${BASE_URL:-http://localhost:8020}&#x000A;BASE_LANGUAGE=${BASE_LANGUAGE:-en}&#x000A;RUN_HEADLESS=${RUN_HEADLESS:-True}</code></pre>
+</li>
+<li>
+args are passed directly to pytest
+<pre><code>-k test_login&#x000A;-x&#x000A;-n 4&#x000A;...&#x000A;</code></pre>
+</li>
+</ul>
+</section>
+<section>
+<h3>Tipssi</h3>
+ThIrd Party Service SImulator
+</section>
+<section>
+<h3>Tipssi</h3>
+<h4>Features</h4>
+<ul>
+<li>Static/Template responses</li>
+<li>Status codes</li>
+<li>Dispatches on HTTP method</li>
+<li>Dispatches on POST/GET variables</li>
+</ul>
+</section>
+<section>
+<h3>Tipssi</h3>
+<pre><code>responses_default ➤ ll&#x000A;total 304K&#x000A;-rw-r--r-- 1 enermis enermis GET_200_mv_authorizations.json&#x000A;-rw-r--r-- 1 enermis enermis GET_200_mv_customers_me.json&#x000A;-rw-r--r-- 1 enermis enermis GET_200_mv_invoices_{{id}}_pdf.pdf&#x000A;-rw-r--r-- 1 enermis enermis GET_200_mv_invoices_page_0_1.json&#x000A;-rw-r--r-- 1 enermis enermis GET_200_mv_orders_{{id}}.json&#x000A;-rw-r--r-- 1 enermis enermis POST_200_mv_oauth2_token.json&#x000A;-rw-r--r-- 1 enermis enermis POST_201_mv_authorizations.json&#x000A;...</code></pre>
+</section>
+<section>
+<h3>Tipssi</h3>
+<h4>Dispatch order</h4>
+<ul>
+<li>
+Parameterized Request
+<pre><code>POST to `updateCustomer`&#x000A;body `{'name': 'test', 'email': 'test@example.com'}`&#x000A;--> POST_200_updateCustomer_email_test_example_com.xml</code></pre>
+</li>
+<li>
+File map
+<pre><code>GET to `getCustomer`&#x000A;--> GET_200_getCustomer.xml</code></pre>
+</li>
+<li>
+Parameterized File Map
+<pre><code>GET to `getCustomer/id/123`&#x000A;--> GET_200_getCustomer_{{param}}_123.xml&#x000A;--> GET_200_getCustomer_id_{{id}}.xml&#x000A;</code></pre>
+</li>
+</ul>
+</section>
+<section>
+<h3>Tipssi</h3>
+<h4>Pain points</h4>
+<ul>
+<li>WSDL updates</li>
+<li>No persistence</li>
+<li>UWA - Tipssi Sync</li>
+</ul>
+</section>
+</div>
+</div>
+<script src='reveal.js/lib/js/head.min.js'></script>
+<script src='reveal.js/js/reveal.min.js'></script>
+<script>
+  // Full list of configuration options available here: JPL
+  // https://github.com/hakimel/reveal.js#configuration
+  Reveal.initialize({
+    controls: true,
+    progress: true,
+    history: true,
+    center: false,
+  
+    theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+    transition: Reveal.getQueryHash().transition || 'linear', // default/cube/page/concave/zoom/linear/fade/none
+  
+    // Optional libraries used to extend on reveal.js
+    dependencies: [
+        { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+        { src: 'reveal.js/plugin/markdown/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+        { src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+        { src: 'reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+        { src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+        { src: 'reveal.js/plugin/highlight/highlight.js', async: true, condition: function() { return !!document.body.classList; } },
+        // { src: 'reveal.js/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+    ]
+  });
+</script>
+</body>
+</html>

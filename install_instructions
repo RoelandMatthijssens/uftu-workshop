@@ -1,0 +1,64 @@
+# prerequisites
+clone uwa/tipssi/mv-web
+
+# TIPSSI
+spin up tipssi
+`docker-compose up`
+
+Test that it is running
+```
+curl -X GET ttp://localhost:9007/mv/customers/me
+```
+
+# UWA
+configure uwa to talk to tipssi instead of bss
+
+add the following to your docker-compose.override.yml file:
+```
+- COMARCH_WSDL=http://sbss_simulator/mlnWebServices/mlnWebshopAPI?wsdl
+- COMARCH_USAGE_HISTORY_SERVER=http://comarch_usage_history_simulator
+- COMARCH_LOYALTY_TRANSACTIONS_SERVER=http://comarch_loyalty_transaction_simulator
+```
+Start uwa
+`docker-compose up`
+
+If you haven't run uwa locally yet you need to migrate the database (more info in the README of UWA)
+`docker-compose run --rm api python manage.py migrate`
+Load the correct waffle flags:
+`curl  -X GET https://staging.api.unleashed.be/testing/all_switches | docker-compose run --rm api python manage.py loaddata --format=json - `
+load some product information by going to:
+`http://localhost:8010/admin/products/cachedproduct/all/sync/mv/`
+
+Create a client in the UWA admin.
+Create an API user in uwa. It needs to match the ID of the customer that tipssi will return. For now tipssi always returns for customer-id = 123. So make sure your user has that ID.
+To reiterate: sbss doesn't do any authentication. All auth logic is defined in UWA. UWA only calls sbss to verify that a user with a give email/msisdn/... exists. It will get a customercode back and will verify the credentials for that user on UWA's side.
+This means that when we try to log in using tipssi we can specify ANY email/username/msisdn (since tipssi will always say it exists with customer ID 123). But the password needs to match the password of the user in UWA.
+Now test that UWA is indeed talking to tipssi:
+```
+curl -X POST \
+  http://localhost:8010/mv/oauth2/token/ \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -H 'content-type: multipart/form-data;' \
+  -F client_id=<CLIENT_ID> \
+  -F client_secret=<CLIENT_SECRET> \
+  -F grant_type=password \
+  -F username=<DOESNT_MATTER> \
+  -F password=<ACTUAL_PASSWORD>
+```
+If everything went correctly UWA will return an access token. And you have successfully logged in.
+
+Furthermore if you go to the console where tipssi is running you will see the calls UWA did to sbss (tipssi).
+```
+sbss_simulator                           | Config file not found in the location: simulators/sbss/config.yml
+sbss_simulator                           | simulators/sbss/responses_default/POST_200_getCustomer.xml
+sbss_simulator                           | 172.18.0.11 - - [19/Oct/2018 15:40:55] "POST /mlnWebServices/mlnWebshopAPI HTTP/1.1" 200 -
+```
+
+# sync product catalog.
+Load the product catalog in uwa if you haven't already
+```http://localhost:8010/admin/products/cachedproduct/all/sync/mv/```
+
+
+# MV-WEB
+Now configure mv-web to talk to your local UWA.
+See confluence https://vikingco.atlassian.net/wiki/spaces/DevBE/pages/523010098/Setting+up+mv-web+testing+environment
